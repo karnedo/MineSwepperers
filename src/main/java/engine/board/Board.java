@@ -61,6 +61,14 @@ public class Board {
         }
     }
 
+    public char[][] getBoxesHidden() {
+        return boxesHidden;
+    }
+
+    public boolean[][] getBoxesVisible() {
+        return boxesVisible;
+    }
+
     private boolean revealCell(int x, int y) {
         if (x < 0 || x >= width || y < 0 || y >= height) return false;
 
