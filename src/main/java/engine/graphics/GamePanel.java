@@ -23,8 +23,6 @@ public class GamePanel extends JPanel{
     public GamePanel(){
         this.board = new Board(maxScreenCol, maxScreenRow);
 
-        this.board.move(3, 5);
-
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
         this.setBackground(Color.BLACK);
         this.setDoubleBuffered(true);
@@ -34,9 +32,12 @@ public class GamePanel extends JPanel{
     }
 
     public void clickTile(int x, int y) {
-        System.out.println("Clicked at: " + x + ", " + y);
-        this.board.move(x, y);
+        boolean bombFound = !this.board.reveal(x, y);
         repaint();
+        if(bombFound){
+            JOptionPane.showMessageDialog(null, "You lost!");
+            System.exit(0);
+        }
     }
 
     @Override
@@ -52,8 +53,6 @@ public class GamePanel extends JPanel{
                 // Adjust the position based on the scale and tileSize
                 int x = i * tileSize;
                 int y = j * tileSize;
-
-
 
                 if (visible) {
                     // Draw revealed cell

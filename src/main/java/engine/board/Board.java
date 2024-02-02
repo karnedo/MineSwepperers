@@ -14,7 +14,10 @@ public class Board {
     private char[][] boxesHidden;
     private boolean[][] boxesVisible;
 
-    public Board(int width, int height){
+    public Board(int width, int height) throws IllegalArgumentException{
+        if(width <= 0 || height <= 0){
+            throw new IllegalArgumentException("Width and heigh have to be bigger than 0.");
+        }
         this.width = width;
         this.height = height;
 
@@ -37,9 +40,9 @@ public class Board {
 
     /**
      *
-     * @return Total points. Returns -1 if a bomb was found.
+     * @return Returns false if a bomb was found.
      */
-    public boolean move(int x, int y) throws IndexOutOfBoundsException {
+    public boolean reveal(int x, int y) throws IndexOutOfBoundsException {
         if (x < 0 || x > width || y < 0 || y > height) throw new IndexOutOfBoundsException();
 
         if (boxesHidden[x][y] == '*') {
@@ -47,18 +50,8 @@ public class Board {
             return false;
         }
 
-
-
-        return revealCell(x,y);
-    }
-
-    public void showBoard(){
-        for (int i = 0; i < width; i++){
-            for (int j = 0; j < height; j++){
-                System.out.print(((boxesVisible[i][j]) ? "" + boxesHidden[i][j] : " ") + " ");
-            }
-            System.out.println();
-        }
+        revealCell(x,y);
+        return true;
     }
 
     public char[][] getBoxesHidden() {
@@ -71,7 +64,6 @@ public class Board {
 
     private boolean revealCell(int x, int y) {
         if (x < 0 || x >= width || y < 0 || y >= height) return false;
-
         if (!boxesVisible[x][y]) {
             boxesVisible[x][y] = true;
 
@@ -83,10 +75,8 @@ public class Board {
                     }
                 }
             }
-
             return true;
         }
-
         return false;
     }
 

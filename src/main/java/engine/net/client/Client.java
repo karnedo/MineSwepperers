@@ -20,8 +20,6 @@ public class Client {
 
         window.setLocationRelativeTo(null);
         window.setVisible(true);
-
-
     }
 
 }
