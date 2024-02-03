@@ -16,8 +16,9 @@ import java.net.SocketAddress;
 
 public class Client {
 
-    private static final String SERVER_IP = "127.0.0.1";
+    private static String SERVER_IP;
     private static final int PORT = 6096;
+    private static String NAME;
 
     private GamePanel gamePanel;
     private JFrame window;
@@ -27,8 +28,30 @@ public class Client {
     private ObjectOutputStream objectOutputStream;
 
     public Client(){
-
+        showConnectionDialog();
     }
+
+    private void showConnectionDialog() {
+        JPanel panel = new JPanel();
+        JTextField ipField = new JTextField(10);
+        JTextField nameField = new JTextField(10);
+
+        panel.add(new JLabel("Server IP:"));
+        panel.add(ipField);
+        panel.add(new JLabel("Your Name:"));
+        panel.add(nameField);
+
+        int result = JOptionPane.showConfirmDialog(null, panel, "Connect to Server",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (result == JOptionPane.OK_OPTION) {
+            SERVER_IP = ipField.getText();
+            NAME = nameField.getText();
+        } else {
+            System.exit(0);
+        }
+    }
+
 
     private void initWaitingWindow() {
         matchmakingWindow = new JFrame("Waiting for Players...");
@@ -60,11 +83,15 @@ public class Client {
     private void start() throws IOException, ClassNotFoundException {
         Socket socket = new Socket(SERVER_IP, PORT);
 
-        //Show a window that says "Waiting players..."
-        initWaitingWindow();
-
         objectInputStream = new ObjectInputStream(socket.getInputStream());
         objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+
+        //Send this client's name to the server
+        objectOutputStream.writeObject(NAME);
+        objectOutputStream.flush();
+
+        //Show a window that says "Waiting players..."
+        initWaitingWindow();
 
         //Get the game's board
         Board board = (Board) objectInputStream.readObject();
@@ -84,7 +111,9 @@ public class Client {
                 processTurn((Coordinate) data);
             }else if(data instanceof Loser){
                 Loser loser = (Loser) data;
-                if(loser.getName().equals(InetAddress.getLocalHost().getHostName())){
+                System.out.println("Loser name: " + loser.getName());
+                System.out.println("My name: " + InetAddress.getLocalHost().getHostName());
+                if(loser.getName().equals(NAME)){
                     loseGame();
                 }
             }

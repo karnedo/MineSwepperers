@@ -35,11 +35,15 @@ public class Server implements Runnable{
 
             System.out.println("Waiting clients...");
 
+            int n = 0;
             while(clients.size() < players){
                 Socket player = server.accept();
-                System.out.println("Player with IP " + player.getInetAddress().getHostAddress() + " connected.");
 
-                clients.add( new ClientData(player) );
+                ClientData clientData = new ClientData(player, "UNKNOWN");
+                String name = (String) clientData.receiveObject();
+                clientData.setName(name);
+
+                clients.add( clientData );
             }
 
             //Send all players the game's board
@@ -48,7 +52,7 @@ public class Server implements Runnable{
             }
 
             return true;
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             return false;
         }
 
@@ -62,7 +66,39 @@ public class Server implements Runnable{
         nextTurn = 0;
 
         while (!board.hasFinished()) {
-            for (ClientData client : clients) {
+            Iterator<ClientData> iter = clients.iterator();
+            while(iter.hasNext()){
+                ClientData client = iter.next();
+                System.out.println("Turn of player with IP " + client.getHostAddress());
+
+                // Notify client it's their turn
+                notifyPlayerTurn(client);
+
+                // Get client's move
+                Coordinate coord = null;
+                boolean bombFound = false;
+                try {
+                    coord = receiveCoords(client);
+                    bombFound = !this.board.reveal(coord.getX(), coord.getY());
+                } catch (IOException | ClassNotFoundException e) {
+                    System.out.println("One or more clients have lost connection. Game is aborted.");
+                    return;
+                }
+                System.out.println("Got " + coord);
+                if(bombFound) {
+                    System.out.println("Mine found by " + client.getHostAddress() + " at " + coord);
+                    sendLostNotification(new Loser(client.getName()));
+                    iter.remove();
+                }
+
+
+                // Send move to all clients
+                System.out.println("Sending " + coord + " to all clients..");
+                sendCoordinateToAll(coord);
+
+                System.out.println("-----------------------");
+            }
+            /*for (ClientData client : clients) {
                 System.out.println("Turn of player with IP " + client.getHostAddress());
 
                 // Notify client it's their turn
@@ -90,7 +126,7 @@ public class Server implements Runnable{
                 sendCoordinateToAll(coord);
 
                 System.out.println("-----------------------");
-            }
+            }*/
 
             try {
                 Thread.sleep(100); // Adjust the sleep duration as needed
@@ -99,24 +135,17 @@ public class Server implements Runnable{
             }
         }
 
+        System.out.println("Game finished.");
+
     }
 
     //Sends everyone a notification of the loser's IP
     private void sendLostNotification(Loser loser) {
-        /*for(ClientData cli : clients){
-            cli.sendObject(loser);
-            if(cli.getHostAddress().equals(loser.getName())){
-                clients.remove(cli);
-            }
-        }*/
         //This needs to be done with an Iterator as otherwise would throw a ConcurrentModificationException
         Iterator<ClientData> iter = clients.iterator();
         while(iter.hasNext()){
             ClientData cli = iter.next();
             cli.sendObject(loser);
-            if(cli.getHostAddress().equals(loser.getName())){
-                iter.remove();
-            }
         }
     }
 

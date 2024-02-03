@@ -8,19 +8,23 @@ import java.net.Socket;
 
 public class ClientData {
 
+    private String name;
     private Socket socket;
     private ObjectOutputStream output;
     private ObjectInputStream input;
 
-    public ClientData(Socket socket) throws IOException {
+    public ClientData(Socket socket, String name) throws IOException {
         this.socket = socket;
+        this.name = name;
         output = new ObjectOutputStream(socket.getOutputStream());
         input = new ObjectInputStream(socket.getInputStream());
     }
 
     public String getName(){
-        return this.socket.getInetAddress().getHostName();
+        return this.name;
     }
+
+    public void setName(String name){this.name = name;}
 
     public String getHostAddress(){
         return this.socket.getInetAddress().getHostAddress();
