@@ -17,7 +17,7 @@ public class Server implements Runnable{
     private ServerSocket server;
     private Board board;
     private int nextTurn;
-    private ArrayList<Socket> clients;
+    private ArrayList<ClientData> clients;
     private Thread thread;
 
     public Server(int width, int height) throws IllegalArgumentException{
@@ -38,7 +38,7 @@ public class Server implements Runnable{
                 Socket player = server.accept();
                 System.out.println("Player with IP " + player.getInetAddress().getHostAddress() + " connected.");
 
-                clients.add( player );
+                clients.add( new ClientData(player) );
             }
 
             return true;
@@ -55,62 +55,61 @@ public class Server implements Runnable{
     public void run() {
         nextTurn = 0;
 
-        //Completa el código
-        while(!board.hasFinished()){
-            Socket clientTurn = clients.get(nextTurn);
-            System.out.println("Turn of player " + nextTurn + " with IP " + clientTurn.getInetAddress().getHostAddress());
+        /*while(!board.hasFinished()){
+            System.out.println("Turn of player " + nextTurn + " with IP " + clients.get(nextTurn).getHostAddress());
             //Notify clientTurn its their turn
-            notifyPlayerTurn(clientTurn);
+            notifyPlayerTurn(clients.get(nextTurn));
 
             //Get clientTurn package
-            Coordinate coord = receiveCoords(clientTurn);
+            Coordinate coord = receiveCoords(clients.get(nextTurn));
             System.out.println("Got " + coord.toString());
 
             //Send package to all clients
             sendCoordinateToAll(coord);
 
-            nextTurn = (nextTurn == clients.size()-1) ? 0 : nextTurn + 1;
+            nextTurn++;
+            nextTurn = (nextTurn == clients.size()) ? 0 : nextTurn;
+        }*/
+        while (!board.hasFinished()) {
+            for (ClientData client : clients) {
+                System.out.println("Turn of player with IP " + client.getHostAddress());
+
+                // Notify client it's their turn
+                notifyPlayerTurn(client);
+
+                // Get client's move
+                Coordinate coord = receiveCoords(client);
+                System.out.println("Got " + coord.toString());
+
+                // Send move to all clients
+                System.out.println("Sending " + coord.toString() + " to all clients..");
+                sendCoordinateToAll(coord);
+
+                System.out.println("-----------------------");
+            }
+
+            try {
+                Thread.sleep(100); // Adjust the sleep duration as needed
+            } catch (InterruptedException e) {
+                e.printStackTrace(); // Handle InterruptedException appropriately
+            }
         }
 
     }
 
     private void sendCoordinateToAll(Coordinate coord) {
-        for(Socket s : clients){
-            sendObject(s, coord);
+        for(ClientData cli : clients){
+            cli.sendObject(coord);
         }
     }
 
-    private Coordinate receiveCoords(Socket clientTurn) {
-        return (Coordinate) receiveObject(clientTurn);
+    private Coordinate receiveCoords(ClientData clientTurn) {
+        return (Coordinate) clientTurn.receiveObject();
     }
 
-    private void notifyPlayerTurn(Socket clientTurn){
+    private void notifyPlayerTurn(ClientData clientTurn){
         //Sends -1, -1 to indicate its this player's turn.
-        sendObject(clientTurn, new Coordinate(-1, -1));
-    }
-
-    private void sendObject(Socket socket, Serializable object){
-        ObjectOutputStream objectOutputStream = null;
-        try {
-            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            objectOutputStream.writeObject(object);
-            objectOutputStream.flush();
-            objectOutputStream.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private Serializable receiveObject(Socket socket){
-        ObjectInputStream objectInputStream = null;
-        try {
-            objectInputStream = new ObjectInputStream(socket.getInputStream());
-            Serializable obj = (Serializable) objectInputStream.readObject();
-            objectInputStream.close();
-            return obj;
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        clientTurn.sendObject(new Coordinate(-1, -1));
     }
 
     public static void main(String[] args){

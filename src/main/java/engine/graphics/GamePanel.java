@@ -14,8 +14,8 @@ public class GamePanel extends JPanel{
 
     private final int tileSize = ogTileSize * scale;
 
-    private final int maxScreenCol = 10;
-    private final int maxScreenRow = 10;
+    private final int maxScreenCol = 8;
+    private final int maxScreenRow = 8;
     private final int screenWidth = maxScreenCol * tileSize;
     private final int screenHeight = maxScreenRow * tileSize;
 

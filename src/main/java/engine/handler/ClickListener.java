@@ -30,4 +30,8 @@ public class ClickListener extends MouseAdapter {
     public Coordinate getClickedCoords(){
         return clickedCoords;
     }
+
+    public void resetCoords() {
+        clickedCoords = null;
+    }
 }

@@ -50,6 +50,8 @@ public class Client {
             //Receives turn's coordinates
             Coordinate coord = (Coordinate) objectInputStream.readObject();
 
+            System.out.println("Received " + coord.toString());
+
             if (coord.getX() == -1 && coord.getY() == -1) {
                 System.out.println("It's your turn!");
                 //Get clicked coords
@@ -57,14 +59,19 @@ public class Client {
                 while(clickedCoords == null){
                     clickedCoords = gamePanel.getClickListener().getClickedCoords();
                 }
+                gamePanel.getClickListener().resetCoords();
 
                 // Send coords to server
                 objectOutputStream.writeObject(clickedCoords);
+                objectOutputStream.flush();
             } else {
                 //Receive coords
                 gamePanel.updateBoard(coord);
             }
         }
+
+        objectInputStream.close();
+        objectOutputStream.close();
 
     }
 
