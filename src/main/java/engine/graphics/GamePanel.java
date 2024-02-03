@@ -1,6 +1,6 @@
 package engine.graphics;
 
-import engine.Coordinate;
+import engine.net.dataPackage.Coordinate;
 import engine.board.Board;
 import engine.handler.ClickListener;
 
@@ -35,19 +35,6 @@ public class GamePanel extends JPanel{
         initWindowSettings();
     }
 
-    //Constructor for offline game
-    public GamePanel(int width, int height){
-        maxScreenCol = width;
-        maxScreenRow = height;
-
-        screenWidth = maxScreenCol * tileSize;
-        screenHeight = maxScreenRow * tileSize;
-
-        this.board = new Board(maxScreenCol, maxScreenRow);
-
-        initWindowSettings();
-    }
-
     private void initWindowSettings(){
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
         this.setBackground(Color.BLACK);
@@ -58,13 +45,14 @@ public class GamePanel extends JPanel{
         this.addMouseListener(clickListener);
     }
 
-    public void clickTile(int x, int y) {
+    public boolean clickTile(int x, int y) {
         boolean bombFound = !this.board.reveal(x, y);
         repaint();
-        if(bombFound){
+        return bombFound;
+        /*if(bombFound){
             JOptionPane.showMessageDialog(null, "You lost!");
             System.exit(0);
-        }
+        }*/
     }
 
     @Override
@@ -118,7 +106,10 @@ public class GamePanel extends JPanel{
         return this.clickListener;
     }
 
-    public void updateBoard(Coordinate coord) {
-        clickTile(coord.getX(), coord.getY());
+    /**
+     * @return if the chosen coordinate is a bomb
+     **/
+    public boolean updateBoard(Coordinate coord) {
+        return clickTile(coord.getX(), coord.getY());
     }
 }

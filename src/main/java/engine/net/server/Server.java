@@ -1,10 +1,10 @@
 package engine.net.server;
 
-import engine.Coordinate;
+import engine.net.dataPackage.Coordinate;
 import engine.board.Board;
-import engine.graphics.GamePanel;
+import engine.net.dataPackage.ClientData;
+import engine.net.dataPackage.Loser;
 
-import javax.swing.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -68,8 +68,21 @@ public class Server implements Runnable{
                 notifyPlayerTurn(client);
 
                 // Get client's move
-                Coordinate coord = receiveCoords(client);
-                System.out.println("Got " + coord.toString());
+                Coordinate coord = null;
+                boolean bombFound = false;
+                try {
+                    coord = receiveCoords(client);
+                    bombFound = !this.board.reveal(coord.getX(), coord.getY());
+                } catch (IOException | ClassNotFoundException e) {
+                    System.out.println("One or more clients have lost connection. Game is aborted.");
+                    return;
+                }
+                System.out.println("Got " + coord);
+                if(bombFound) {
+                    System.out.println("Mine found by " + client.getHostAddress() + " at " + coord);
+                    sendLostNotification(new Loser(client.getHostAddress()));
+                }
+
 
                 // Send move to all clients
                 System.out.println("Sending " + coord.toString() + " to all clients..");
@@ -87,13 +100,23 @@ public class Server implements Runnable{
 
     }
 
+    //Sends everyone a notification of the loser's IP
+    private void sendLostNotification(Loser loser) {
+        for(ClientData cli : clients){
+            cli.sendObject(loser);
+            if(cli.getHostAddress().equals(loser.getIP())){
+                clients.remove(cli);
+            }
+        }
+    }
+
     private void sendCoordinateToAll(Coordinate coord) {
         for(ClientData cli : clients){
             cli.sendObject(coord);
         }
     }
 
-    private Coordinate receiveCoords(ClientData clientTurn) {
+    private Coordinate receiveCoords(ClientData clientTurn) throws IOException, ClassNotFoundException {
         return (Coordinate) clientTurn.receiveObject();
     }
 

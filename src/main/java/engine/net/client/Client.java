@@ -1,13 +1,16 @@
 package engine.net.client;
 
-import engine.Coordinate;
+import engine.net.dataPackage.Coordinate;
 import engine.board.Board;
 import engine.graphics.GamePanel;
+import engine.net.dataPackage.Loser;
 
 import javax.swing.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.net.InetAddress;
 import java.net.Socket;
 
 public class Client {
@@ -18,6 +21,9 @@ public class Client {
     private GamePanel gamePanel;
     private JFrame window;
     private JFrame matchmakingWindow;
+
+    private ObjectInputStream objectInputStream;
+    private ObjectOutputStream objectOutputStream;
 
     public Client(){
 
@@ -53,48 +59,67 @@ public class Client {
     private void start() throws IOException, ClassNotFoundException {
         Socket socket = new Socket(SERVER_IP, PORT);
 
-        //Add a window that says "Waiting players..."
+        //Show a window that says "Waiting players..."
         initWaitingWindow();
 
-        ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
-        ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+        objectInputStream = new ObjectInputStream(socket.getInputStream());
+        objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 
         //Get the game's board
         Board board = (Board) objectInputStream.readObject();
         this.gamePanel = new GamePanel(board);
 
+        //Show game board's window
         initWindow();
         matchmakingWindow.dispose();
 
         boolean hasLost = false;
 
         while (!hasLost) {
-            //Receives turn's coordinates
-            Coordinate coord = (Coordinate) objectInputStream.readObject();
+            //Receive package
+            Object data = objectInputStream.readObject();
 
-            System.out.println("Received " + coord.toString());
-
-            if (coord.getX() == -1 && coord.getY() == -1) {
-                System.out.println("It's your turn!");
-                //Get clicked coords
-                Coordinate clickedCoords = null;
-                while(clickedCoords == null){
-                    clickedCoords = gamePanel.getClickListener().getClickedCoords();
+            if(data instanceof Coordinate){
+                processTurn((Coordinate) data);
+            }else if(data instanceof Loser){
+                Loser loser = (Loser) data;
+                if(loser.getIP().equals(InetAddress.getLocalHost().getHostAddress())){
+                    loseGame();
                 }
-                gamePanel.getClickListener().resetCoords();
-
-                // Send coords to server
-                objectOutputStream.writeObject(clickedCoords);
-                objectOutputStream.flush();
-            } else {
-                //Receive coords
-                gamePanel.updateBoard(coord);
             }
+
+
         }
 
         objectInputStream.close();
         objectOutputStream.close();
 
+    }
+
+    private void loseGame() {
+        JOptionPane.showMessageDialog(null, "You lost.");
+        System.exit(0);
+    }
+
+    private void processTurn(Coordinate coord) throws IOException, ClassNotFoundException {
+        System.out.println("Received " + coord.toString());
+
+        if (coord.getX() == -1 && coord.getY() == -1) {
+            System.out.println("It's your turn!");
+            //Get clicked coords
+            Coordinate clickedCoords = null;
+            while(clickedCoords == null){
+                clickedCoords = gamePanel.getClickListener().getClickedCoords();
+            }
+            gamePanel.getClickListener().resetCoords();
+
+            // Send coords to server
+            objectOutputStream.writeObject(clickedCoords);
+            objectOutputStream.flush();
+        } else {
+            //Receive coords
+            gamePanel.updateBoard(coord);
+        }
     }
 
     public static void main(String[] args) {
