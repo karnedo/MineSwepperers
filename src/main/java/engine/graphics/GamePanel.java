@@ -1,5 +1,6 @@
 package engine.graphics;
 
+import engine.Coordinate;
 import engine.board.Board;
 import engine.handler.ClickListener;
 
@@ -18,6 +19,8 @@ public class GamePanel extends JPanel{
     private final int screenWidth = maxScreenCol * tileSize;
     private final int screenHeight = maxScreenRow * tileSize;
 
+    private ClickListener clickListener;
+
     Board board;
 
     public GamePanel(){
@@ -28,7 +31,8 @@ public class GamePanel extends JPanel{
         this.setDoubleBuffered(true);
         this.setFocusable(true);
 
-        this.addMouseListener(new ClickListener(this));
+        clickListener = new ClickListener(this);
+        this.addMouseListener(clickListener);
     }
 
     public void clickTile(int x, int y) {
@@ -87,4 +91,11 @@ public class GamePanel extends JPanel{
         return tileSize;
     }
 
+    public ClickListener getClickListener() {
+        return this.clickListener;
+    }
+
+    public void updateBoard(Coordinate coord) {
+        clickTile(coord.getX(), coord.getY());
+    }
 }

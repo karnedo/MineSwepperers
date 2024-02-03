@@ -1,6 +1,8 @@
 package engine.handler;
 
+import engine.Coordinate;
 import engine.graphics.GamePanel;
+import engine.net.client.Client;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -8,6 +10,7 @@ import java.awt.event.MouseEvent;
 public class ClickListener extends MouseAdapter {
 
     private GamePanel gamePanel;
+    private volatile Coordinate clickedCoords;
 
     public ClickListener(GamePanel gamePanel){
         this.gamePanel = gamePanel;
@@ -21,6 +24,10 @@ public class ClickListener extends MouseAdapter {
         int tileX = mouseX / gamePanel.getTileSize();
         int tileY = mouseY / gamePanel.getTileSize();
 
-        gamePanel.clickTile(tileX, tileY);
+        clickedCoords = new Coordinate(tileX, tileY);
+    }
+
+    public Coordinate getClickedCoords(){
+        return clickedCoords;
     }
 }

@@ -14,6 +14,9 @@ public class Board {
     private char[][] boxesHidden;
     private boolean[][] boxesVisible;
 
+    private int totalMines;
+    private int revealedBoxes;
+
     public Board(int width, int height) throws IllegalArgumentException{
         if(width <= 0 || height <= 0){
             throw new IllegalArgumentException("Width and heigh have to be bigger than 0.");
@@ -29,9 +32,13 @@ public class Board {
     }
 
     private void setup(float prob){
+        float random;
         for (int i = 0; i < width; i++){
             for (int j = 0; j < height; j++){
-                boxesHidden[i][j] = (Math.random() < prob) ? '*' : '-';
+                random = (float) Math.random();
+                if(random < prob) totalMines++;
+
+                boxesHidden[i][j] = (random < prob) ? '*' : '-';
                 boxesVisible[i][j] = false;
             }
         }
@@ -65,6 +72,7 @@ public class Board {
     private boolean revealCell(int x, int y) {
         if (x < 0 || x >= width || y < 0 || y >= height) return false;
         if (!boxesVisible[x][y]) {
+            revealedBoxes++;
             boxesVisible[x][y] = true;
 
             if (boxesHidden[x][y] == '0') {
@@ -101,6 +109,8 @@ public class Board {
         return count;
     }
 
-
+    public boolean hasFinished(){
+        return totalMines >= (boxesVisible.length * boxesVisible[0].length) - revealedBoxes;
+    }
 
 }
