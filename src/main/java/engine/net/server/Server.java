@@ -41,6 +41,11 @@ public class Server implements Runnable{
                 clients.add( new ClientData(player) );
             }
 
+            //Send all players the game's board
+            for(ClientData cli : clients){
+                cli.sendObject(board);
+            }
+
             return true;
         } catch (IOException e) {
             return false;
@@ -55,21 +60,6 @@ public class Server implements Runnable{
     public void run() {
         nextTurn = 0;
 
-        /*while(!board.hasFinished()){
-            System.out.println("Turn of player " + nextTurn + " with IP " + clients.get(nextTurn).getHostAddress());
-            //Notify clientTurn its their turn
-            notifyPlayerTurn(clients.get(nextTurn));
-
-            //Get clientTurn package
-            Coordinate coord = receiveCoords(clients.get(nextTurn));
-            System.out.println("Got " + coord.toString());
-
-            //Send package to all clients
-            sendCoordinateToAll(coord);
-
-            nextTurn++;
-            nextTurn = (nextTurn == clients.size()) ? 0 : nextTurn;
-        }*/
         while (!board.hasFinished()) {
             for (ClientData client : clients) {
                 System.out.println("Turn of player with IP " + client.getHostAddress());

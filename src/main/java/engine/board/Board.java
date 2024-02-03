@@ -1,6 +1,8 @@
 package engine.board;
 
-public class Board {
+import java.io.Serializable;
+
+public class Board implements Serializable {
 
     private final int width;
     private final int height;
@@ -112,5 +114,8 @@ public class Board {
     public boolean hasFinished(){
         return totalMines >= (boxesVisible.length * boxesVisible[0].length) - revealedBoxes;
     }
+
+    public int getWidth(){ return this.width; }
+    public int getHeight(){ return this.height; }
 
 }

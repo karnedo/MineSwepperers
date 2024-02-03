@@ -14,18 +14,41 @@ public class GamePanel extends JPanel{
 
     private final int tileSize = ogTileSize * scale;
 
-    private final int maxScreenCol = 8;
-    private final int maxScreenRow = 8;
-    private final int screenWidth = maxScreenCol * tileSize;
-    private final int screenHeight = maxScreenRow * tileSize;
+    private final int maxScreenCol;
+    private final int maxScreenRow;
+    private final int screenWidth;
+    private final int screenHeight;
 
     private ClickListener clickListener;
 
     Board board;
 
-    public GamePanel(){
+    public GamePanel(Board board){
+        maxScreenCol = board.getWidth();
+        maxScreenRow = board.getHeight();
+
+        screenWidth = maxScreenCol * tileSize;
+        screenHeight = maxScreenRow * tileSize;
+
+        this.board = board;
+
+        initWindowSettings();
+    }
+
+    //Constructor for offline game
+    public GamePanel(int width, int height){
+        maxScreenCol = width;
+        maxScreenRow = height;
+
+        screenWidth = maxScreenCol * tileSize;
+        screenHeight = maxScreenRow * tileSize;
+
         this.board = new Board(maxScreenCol, maxScreenRow);
 
+        initWindowSettings();
+    }
+
+    private void initWindowSettings(){
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
         this.setBackground(Color.BLACK);
         this.setDoubleBuffered(true);
