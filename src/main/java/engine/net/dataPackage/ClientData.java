@@ -18,6 +18,10 @@ public class ClientData {
         input = new ObjectInputStream(socket.getInputStream());
     }
 
+    public String getName(){
+        return this.socket.getInetAddress().getHostName();
+    }
+
     public String getHostAddress(){
         return this.socket.getInetAddress().getHostAddress();
     }

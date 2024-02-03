@@ -12,6 +12,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 
 public class Client {
 
@@ -83,7 +84,7 @@ public class Client {
                 processTurn((Coordinate) data);
             }else if(data instanceof Loser){
                 Loser loser = (Loser) data;
-                if(loser.getIP().equals(InetAddress.getLocalHost().getHostAddress())){
+                if(loser.getName().equals(InetAddress.getLocalHost().getHostName())){
                     loseGame();
                 }
             }

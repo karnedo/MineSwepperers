@@ -4,14 +4,14 @@ import java.io.Serializable;
 
 public class Loser implements Serializable {
 
-    private String IP;
+    private String loser;
 
-    public Loser(String IP){
-        this.IP = IP;
+    public Loser(String loser){
+        this.loser = loser;
     }
 
-    public String getIP(){
-        return this.IP;
+    public String getName(){
+        return this.loser;
     }
 
 }

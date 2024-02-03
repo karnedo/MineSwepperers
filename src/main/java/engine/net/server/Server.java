@@ -9,6 +9,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class Server implements Runnable{
 
@@ -80,12 +81,12 @@ public class Server implements Runnable{
                 System.out.println("Got " + coord);
                 if(bombFound) {
                     System.out.println("Mine found by " + client.getHostAddress() + " at " + coord);
-                    sendLostNotification(new Loser(client.getHostAddress()));
+                    sendLostNotification(new Loser(client.getName()));
                 }
 
 
                 // Send move to all clients
-                System.out.println("Sending " + coord.toString() + " to all clients..");
+                System.out.println("Sending " + coord + " to all clients..");
                 sendCoordinateToAll(coord);
 
                 System.out.println("-----------------------");
@@ -102,10 +103,19 @@ public class Server implements Runnable{
 
     //Sends everyone a notification of the loser's IP
     private void sendLostNotification(Loser loser) {
-        for(ClientData cli : clients){
+        /*for(ClientData cli : clients){
             cli.sendObject(loser);
-            if(cli.getHostAddress().equals(loser.getIP())){
+            if(cli.getHostAddress().equals(loser.getName())){
                 clients.remove(cli);
+            }
+        }*/
+        //This needs to be done with an Iterator as otherwise would throw a ConcurrentModificationException
+        Iterator<ClientData> iter = clients.iterator();
+        while(iter.hasNext()){
+            ClientData cli = iter.next();
+            cli.sendObject(loser);
+            if(cli.getHostAddress().equals(loser.getName())){
+                iter.remove();
             }
         }
     }
