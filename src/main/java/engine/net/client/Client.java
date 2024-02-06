@@ -14,6 +14,7 @@ import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.security.spec.RSAOtherPrimeInfo;
 
 public class Client {
 
@@ -28,9 +29,7 @@ public class Client {
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;
 
-    public Client(){
-        showConnectionDialog();
-    }
+    public Client(){ }
 
     private void showConnectionDialog() {
         JPanel panel = new JPanel();
@@ -81,8 +80,30 @@ public class Client {
         window.setVisible(true);
     }
 
+    private Socket connect(){
+        boolean validData = false;
+        boolean couldConnect = false;
+        Socket socket = null;
+        do{
+            showConnectionDialog();
+            validData = !SERVER_IP.isBlank() && !NAME.isBlank();
+            if(!validData) JOptionPane.showMessageDialog(null, "Invalid data.");
+            try {
+                socket = new Socket(SERVER_IP, PORT);
+                couldConnect = true;
+            } catch (IOException e) {
+                couldConnect = false;
+                JOptionPane.showMessageDialog(null, "Could not connect to server: "
+                    + e);
+            }
+        }while(!validData && !couldConnect);
+
+        return socket;
+    }
+
     private void start() throws IOException, ClassNotFoundException {
-        Socket socket = new Socket(SERVER_IP, PORT);
+
+        Socket socket = connect();
 
         objectInputStream = new ObjectInputStream(socket.getInputStream());
         objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
@@ -135,6 +156,11 @@ public class Client {
 
     }
 
+    /* Set the current game's state */
+    private void setState(String message){
+        window.setTitle(message);
+    }
+
     private void winGame(String names[]) {
         String message = "";
         if(names.length > 1) {
@@ -156,13 +182,15 @@ public class Client {
         System.out.println("Received " + coord.toString());
 
         if (coord.getX() == -1 && coord.getY() == -1) {
-            System.out.println("It's your turn!");
+            setState("It's your turn");
             //Get clicked coords
             Coordinate clickedCoords = null;
             while(clickedCoords == null){
                 clickedCoords = gamePanel.getClickListener().getClickedCoords();
             }
             gamePanel.getClickListener().resetCoords();
+
+            setState("Wait for your turn");
 
             // Send coords to server
             objectOutputStream.writeObject(clickedCoords);

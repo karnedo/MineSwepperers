@@ -49,10 +49,6 @@ public class GamePanel extends JPanel{
         boolean bombFound = !this.board.reveal(x, y);
         repaint();
         return bombFound;
-        /*if(bombFound){
-            JOptionPane.showMessageDialog(null, "You lost!");
-            System.exit(0);
-        }*/
     }
 
     @Override

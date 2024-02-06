@@ -68,7 +68,7 @@ public class Server implements Runnable{
 
         while (!board.hasFinished()) {
             Iterator<ClientData> iter = clients.iterator();
-            while(iter.hasNext()){
+            while(iter.hasNext() && !board.hasFinished()){
                 ClientData client = iter.next();
                 System.out.println("Turn of player with IP " + client.getHostAddress());
 
@@ -172,12 +172,26 @@ public class Server implements Runnable{
     }
 
     public static void main(String[] args){
-        Server server = new Server(8, 8);
-        if(server.startMatchmaking(1)){
-            System.out.println("Starting game...");
-            server.startGame();
+        if(args.length == 2){
+            try{
+                int boardSize = Integer.parseInt(args[0]);
+                int numPlayers = Integer.parseInt(args[1]);
+                if(boardSize < 8 || numPlayers < 1){
+                    System.out.println("Board size has to be bigger than 7 and number of players at least 1");
+                }else{
+                    Server server = new Server(boardSize, boardSize);
+                    if(server.startMatchmaking(numPlayers)){
+                        System.out.println("Starting game...");
+                        server.startGame();
+                    }else{
+                        System.out.println("Couldn't make matchmaking.");
+                    }
+                }
+            }catch (NumberFormatException e){
+                System.out.println("Usage: java server.java <Board size> <Number of players>");
+            }
         }else{
-            System.out.println("Couldn't make matchmaking.");
+            System.out.println("Usage: java server.java <Board size> <Number of players>");
         }
 
     }
