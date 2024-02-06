@@ -4,6 +4,7 @@ import engine.net.dataPackage.Coordinate;
 import engine.board.Board;
 import engine.graphics.GamePanel;
 import engine.net.dataPackage.Loser;
+import engine.net.dataPackage.Winners;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -101,9 +102,9 @@ public class Client {
         initWindow();
         matchmakingWindow.dispose();
 
-        boolean hasLost = false;
+        boolean hasEnded = false;
 
-        while (!hasLost) {
+        while (!hasEnded) {
             //Receive package
             Object data = objectInputStream.readObject();
 
@@ -115,20 +116,40 @@ public class Client {
                 System.out.println("My name: " + InetAddress.getLocalHost().getHostName());
                 if(loser.getName().equals(NAME)){
                     loseGame();
+                    hasEnded = true;
+                }
+            }else if(data instanceof Winners){
+                Winners winners = (Winners) data;
+                if(winners.hasWinner(NAME)){
+                    winGame(winners.getNames());
+                    hasEnded = true;
                 }
             }
-
 
         }
 
         objectInputStream.close();
         objectOutputStream.close();
 
+        System.exit(0);
+
+    }
+
+    private void winGame(String names[]) {
+        String message = "";
+        if(names.length > 1) {
+            for (String s : names) {
+                if (!s.equals(NAME)) message += s + ", ";
+            }
+            message += "and you won!";
+        }else{
+            message += "You won!";
+        }
+        JOptionPane.showMessageDialog(null, message);
     }
 
     private void loseGame() {
         JOptionPane.showMessageDialog(null, "You lost.");
-        System.exit(0);
     }
 
     private void processTurn(Coordinate coord) throws IOException, ClassNotFoundException {

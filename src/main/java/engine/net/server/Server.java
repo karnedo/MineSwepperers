@@ -4,6 +4,7 @@ import engine.net.dataPackage.Coordinate;
 import engine.board.Board;
 import engine.net.dataPackage.ClientData;
 import engine.net.dataPackage.Loser;
+import engine.net.dataPackage.Winners;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -75,8 +76,8 @@ public class Server implements Runnable{
                 notifyPlayerTurn(client);
 
                 // Get client's move
-                Coordinate coord = null;
-                boolean bombFound = false;
+                Coordinate coord;
+                boolean bombFound;
                 try {
                     coord = receiveCoords(client);
                     bombFound = !this.board.reveal(coord.getX(), coord.getY());
@@ -86,7 +87,7 @@ public class Server implements Runnable{
                 }
                 System.out.println("Got " + coord);
                 if(bombFound) {
-                    System.out.println("Mine found by " + client.getHostAddress() + " at " + coord);
+                    System.out.println("Mine found by " + client.getName() + " at " + coord);
                     sendLostNotification(new Loser(client.getName()));
                     iter.remove();
                 }
@@ -98,44 +99,31 @@ public class Server implements Runnable{
 
                 System.out.println("-----------------------");
             }
-            /*for (ClientData client : clients) {
-                System.out.println("Turn of player with IP " + client.getHostAddress());
 
-                // Notify client it's their turn
-                notifyPlayerTurn(client);
-
-                // Get client's move
-                Coordinate coord = null;
-                boolean bombFound = false;
-                try {
-                    coord = receiveCoords(client);
-                    bombFound = !this.board.reveal(coord.getX(), coord.getY());
-                } catch (IOException | ClassNotFoundException e) {
-                    System.out.println("One or more clients have lost connection. Game is aborted.");
-                    return;
-                }
-                System.out.println("Got " + coord);
-                if(bombFound) {
-                    System.out.println("Mine found by " + client.getHostAddress() + " at " + coord);
-                    sendLostNotification(new Loser(client.getName()));
-                }
-
-
-                // Send move to all clients
-                System.out.println("Sending " + coord + " to all clients..");
-                sendCoordinateToAll(coord);
-
-                System.out.println("-----------------------");
-            }*/
+            if(clients.isEmpty()){
+                System.out.println("Nobody won.");
+                break;
+            }
 
             try {
-                Thread.sleep(100); // Adjust the sleep duration as needed
+                Thread.sleep(100);
             } catch (InterruptedException e) {
-                e.printStackTrace(); // Handle InterruptedException appropriately
+                e.printStackTrace();
             }
         }
 
         System.out.println("Game finished.");
+        if(!clients.isEmpty()){
+            System.out.println("Sending the notification to all winners...");
+            Winners winners = new Winners(getNames());
+            sendWinNotification(winners);
+            System.out.println("Winners: ");
+            for(String name : winners.getNames()){
+                System.out.print(name + " | ");
+            }
+        }else{
+            System.out.println("No winners.");
+        }
 
     }
 
@@ -146,6 +134,25 @@ public class Server implements Runnable{
         while(iter.hasNext()){
             ClientData cli = iter.next();
             cli.sendObject(loser);
+        }
+    }
+
+    private String[] getNames(){
+        Iterator<ClientData> iter = clients.iterator();
+        String[] names = new String[clients.size()];
+        int n = 0;
+        while(iter.hasNext()){
+            ClientData cli = iter.next();
+            names[n++] = cli.getName();
+        }
+        return names;
+    }
+
+    private void sendWinNotification(Winners winners) {
+        Iterator<ClientData> iter = clients.iterator();
+        while(iter.hasNext()){
+            ClientData cli = iter.next();
+            cli.sendObject(winners);
         }
     }
 
@@ -166,7 +173,7 @@ public class Server implements Runnable{
 
     public static void main(String[] args){
         Server server = new Server(8, 8);
-        if(server.startMatchmaking(2)){
+        if(server.startMatchmaking(1)){
             System.out.println("Starting game...");
             server.startGame();
         }else{
