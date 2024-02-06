@@ -7,10 +7,7 @@ import engine.net.dataPackage.Loser;
 import engine.net.dataPackage.Winners;
 
 import javax.swing.*;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
@@ -88,15 +85,17 @@ public class Client {
             showConnectionDialog();
             validData = !SERVER_IP.isBlank() && !NAME.isBlank();
             if(!validData) JOptionPane.showMessageDialog(null, "Invalid data.");
-            try {
-                socket = new Socket(SERVER_IP, PORT);
-                couldConnect = true;
-            } catch (IOException e) {
-                couldConnect = false;
-                JOptionPane.showMessageDialog(null, "Could not connect to server: "
-                    + e);
+            if(validData){
+                try {
+                    couldConnect = true;
+                    socket = new Socket(SERVER_IP, PORT);
+                } catch (IOException e) {
+                    couldConnect = false;
+                    JOptionPane.showMessageDialog(null, "Could not connect to server: "
+                            + e);
+                }
             }
-        }while(!validData && !couldConnect);
+        }while(!validData || !couldConnect);
 
         return socket;
     }
@@ -104,6 +103,8 @@ public class Client {
     private void start() throws IOException, ClassNotFoundException {
 
         Socket socket = connect();
+
+        if(socket == null){ System.exit(0); }
 
         objectInputStream = new ObjectInputStream(socket.getInputStream());
         objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
@@ -185,8 +186,10 @@ public class Client {
             setState("It's your turn");
             //Get clicked coords
             Coordinate clickedCoords = null;
-            while(clickedCoords == null){
+            boolean tileIsRevealed = false;
+            while(clickedCoords == null || tileIsRevealed){
                 clickedCoords = gamePanel.getClickListener().getClickedCoords();
+                if(clickedCoords != null) tileIsRevealed = gamePanel.isTileRevealed(clickedCoords);
             }
             gamePanel.getClickListener().resetCoords();
 
@@ -205,9 +208,10 @@ public class Client {
         Client client = new Client();
         try {
             client.start();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (ClassNotFoundException e) {
+        } catch(EOFException e){
+            JOptionPane.showMessageDialog(null, "The server has closed the connection!");
+            System.exit(0);
+        } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }

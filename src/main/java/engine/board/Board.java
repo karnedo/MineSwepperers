@@ -90,6 +90,10 @@ public class Board implements Serializable {
         return false;
     }
 
+    public boolean isRevealed(int x, int y){
+        return boxesVisible[x][y];
+    }
+
     private void calculateAdjacentMines() {
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {

@@ -102,6 +102,10 @@ public class GamePanel extends JPanel{
         return this.clickListener;
     }
 
+    public boolean isTileRevealed(Coordinate coord){
+        return board.isRevealed(coord.getX(), coord.getY());
+    }
+
     /**
      * @return if the chosen coordinate is a bomb
      **/
