@@ -20,6 +20,8 @@ Espera a que el resto de jugadores se conecte. Una vez dentro, cuando sea su tur
 Para ejecutar el servidor use `java -jar server.jar <tamaño del tablero> <número de jugadores>`. 
 Si por el contrario desea ejecutar el servidor con una interfaz, puede hacer directamente `java -jar server.jar`.
 
+> :warning: **Si el cliente está en el mismo dispositivo que el servidor**: El servidor identifica a los jugadores por IP. Esto hace que solo pueda haber un cliente por servidor por dispositivo. Si desea probar el funcionamiento del juego con más de un jugador en localhost, será necesario ejecutar al menos un cliente fuera del dispositivo que hace de servidor.
+
 Si ejecuta el servidor por terminal, este se ocupará de hacer el matchmaking automática. En cambio, si ejecuta el servidor
 utilizando la interfaz, deberá de especificar el tamaño del tablero y el número de jugadores:
 
