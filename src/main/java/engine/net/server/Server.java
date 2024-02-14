@@ -69,6 +69,7 @@ public class Server implements Runnable{
             return true;
         } catch (IOException | ClassNotFoundException e) {
             print("A problem making matchmaking has ocurred.");
+            print(e.toString());
             return false;
         }
 
