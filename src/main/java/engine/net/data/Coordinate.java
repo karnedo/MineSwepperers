@@ -1,9 +1,9 @@
-package engine.net.dataPackage;
+package engine.net.data;
 
 import java.io.Serializable;
 
 public class Coordinate implements Serializable {
-    private int x, y;
+    private final int x, y;
 
     public Coordinate(int x, int y){
         this.x = x;

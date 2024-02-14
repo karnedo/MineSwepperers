@@ -1,10 +1,10 @@
 package engine.net.server;
 
-import engine.net.dataPackage.Coordinate;
+import engine.net.data.Coordinate;
 import engine.board.Board;
-import engine.net.dataPackage.ClientData;
-import engine.net.dataPackage.Loser;
-import engine.net.dataPackage.Winners;
+import engine.net.data.ClientData;
+import engine.net.data.Loser;
+import engine.net.data.Winners;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -18,25 +18,37 @@ public class Server implements Runnable{
 
     private ServerSocket server;
     private Board board;
-    private int nextTurn;
     private ArrayList<ClientData> clients;
     private Thread thread;
+    private guiService gui;
 
-    public Server(int width, int height) throws IllegalArgumentException{
-        board = new Board(width, height);
+    private int players;
+
+    public Server(guiService gui){
+        this.gui = gui;
         thread = new Thread(this);
     }
 
-    //Looks for the given num of players to join the server. Returns whether there was an error or not
-    public boolean startMatchmaking(int players) {
+    public Server(int width, int height) throws IllegalArgumentException{
+        generateBoard(width, height);
+        thread = new Thread(this);
+    }
 
+    protected void generateBoard(int width, int height) throws IllegalArgumentException{
+        board = new Board(width, height);
+    }
+
+    protected void setPlayers(int players){ this.players = players; }
+
+    //Looks for the given num of players to join the server. Returns whether there was an error or not
+    private boolean startMatchmaking(int players) {
         try {
+            print("Matchmaking started.");
             server = new ServerSocket(PORT);
             clients = new ArrayList<>();
 
-            System.out.println("Waiting clients...");
+            print("Waiting clients...");
 
-            int n = 0;
             while(clients.size() < players){
                 Socket player = server.accept();
 
@@ -45,6 +57,7 @@ public class Server implements Runnable{
                 clientData.setName(name);
 
                 clients.add( clientData );
+                print("Player with IP " + clientData.getHostAddress() + " joined.");
             }
 
             //Send all players the game's board
@@ -52,8 +65,10 @@ public class Server implements Runnable{
                 cli.sendObject(board);
             }
 
+            print("All players ready");
             return true;
         } catch (IOException | ClassNotFoundException e) {
+            print("A problem making matchmaking has ocurred.");
             return false;
         }
 
@@ -64,13 +79,14 @@ public class Server implements Runnable{
 
     @Override
     public void run() {
-        nextTurn = 0;
-
+        if(!startMatchmaking(players)) return;
+        print("Starting game...");
+        print("----------------");
         while (!board.hasFinished()) {
             Iterator<ClientData> iter = clients.iterator();
             while(iter.hasNext() && !board.hasFinished()){
                 ClientData client = iter.next();
-                System.out.println("Turn of player with IP " + client.getHostAddress());
+                print("Turn of player with IP " + client.getHostAddress());
 
                 // Notify client it's their turn
                 notifyPlayerTurn(client);
@@ -82,26 +98,26 @@ public class Server implements Runnable{
                     coord = receiveCoords(client);
                     bombFound = !this.board.reveal(coord.getX(), coord.getY());
                 } catch (IOException | ClassNotFoundException e) {
-                    System.out.println("One or more clients have lost connection. Game is aborted.");
+                    print("One or more clients have lost connection. Game is aborted.");
                     return;
                 }
-                System.out.println("Got " + coord);
+                print("Server received " + coord);
                 if(bombFound) {
-                    System.out.println("Mine found by " + client.getName() + " at " + coord);
+                    print("Mine found by " + client.getName() + " at " + coord);
                     sendLostNotification(new Loser(client.getName()));
                     iter.remove();
                 }
 
 
                 // Send move to all clients
-                System.out.println("Sending " + coord + " to all clients..");
+                print("Sending " + coord + " to all clients..");
                 sendCoordinateToAll(coord);
 
-                System.out.println("-----------------------");
+                print("-----------------------");
             }
 
             if(clients.isEmpty()){
-                System.out.println("Nobody won.");
+                print("Nobody won.");
                 break;
             }
 
@@ -112,19 +128,27 @@ public class Server implements Runnable{
             }
         }
 
-        System.out.println("Game finished.");
+        print("Game finished.");
         if(!clients.isEmpty()){
-            System.out.println("Sending the notification to all winners...");
+            print("Sending the notification to all winners...");
             Winners winners = new Winners(getNames());
             sendWinNotification(winners);
-            System.out.println("Winners: ");
+            print("Winners: ");
             for(String name : winners.getNames()){
-                System.out.print(name + " | ");
+                print(name + " | ");
             }
         }else{
-            System.out.println("No winners.");
+            print("No winners.");
         }
 
+    }
+
+    private void print(String msg){
+        if(gui == null){
+            System.out.println(msg);
+        }else{
+            gui.printMessage(msg);
+        }
     }
 
     //Sends everyone a notification of the loser's IP
@@ -190,7 +214,13 @@ public class Server implements Runnable{
             }catch (NumberFormatException e){
                 System.out.println("Usage: java server.java <Board size> <Number of players>");
             }
-        }else{
+        }else if(args.length == 0){
+            java.awt.EventQueue.invokeLater(new Runnable() {
+                public void run() {
+                    new ServerGUI().setVisible(true);
+                }
+            });
+        } else{
             System.out.println("Usage: java server.java <Board size> <Number of players>");
         }
 

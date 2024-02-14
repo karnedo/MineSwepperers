@@ -1,17 +1,16 @@
 package engine.net.client;
 
-import engine.net.dataPackage.Coordinate;
+import engine.graphics.GameWindow;
+import engine.net.data.Coordinate;
 import engine.board.Board;
 import engine.graphics.GamePanel;
-import engine.net.dataPackage.Loser;
-import engine.net.dataPackage.Winners;
+import engine.net.data.Loser;
+import engine.net.data.Winners;
 
 import javax.swing.*;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.SocketAddress;
-import java.security.spec.RSAOtherPrimeInfo;
 
 public class Client {
 
@@ -20,11 +19,10 @@ public class Client {
     private static String NAME;
 
     private GamePanel gamePanel;
-    private JFrame window;
-    private JFrame matchmakingWindow;
 
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;
+    private GameWindow game;
 
     public Client(){ }
 
@@ -47,34 +45,6 @@ public class Client {
         } else {
             System.exit(0);
         }
-    }
-
-
-    private void initWaitingWindow() {
-        matchmakingWindow = new JFrame("Waiting for Players...");
-        matchmakingWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        matchmakingWindow.setSize(300, 100);
-
-        JLabel waitingLabel = new JLabel("Waiting for other players to join...");
-        waitingLabel.setHorizontalAlignment(JLabel.CENTER);
-
-        matchmakingWindow.add(waitingLabel);
-        matchmakingWindow.setLocationRelativeTo(null);
-        matchmakingWindow.setVisible(true);
-    }
-
-    private void initWindow(){
-        window = new JFrame();
-        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.setResizable(false);
-        window.setTitle("Game");
-
-        window.add(gamePanel);
-
-        window.pack();
-
-        window.setLocationRelativeTo(null);
-        window.setVisible(true);
     }
 
     private Socket connect(){
@@ -113,16 +83,13 @@ public class Client {
         objectOutputStream.writeObject(NAME);
         objectOutputStream.flush();
 
-        //Show a window that says "Waiting players..."
-        initWaitingWindow();
+        this.game = new GameWindow();
 
         //Get the game's board
         Board board = (Board) objectInputStream.readObject();
-        this.gamePanel = new GamePanel(board);
 
         //Show game board's window
-        initWindow();
-        matchmakingWindow.dispose();
+        game.startGame(board);
 
         boolean hasEnded = false;
 
@@ -159,10 +126,10 @@ public class Client {
 
     /* Set the current game's state */
     private void setState(String message){
-        window.setTitle(message);
+        game.setTitle(message);
     }
 
-    private void winGame(String names[]) {
+    private void winGame(String[] names) {
         String message = "";
         if(names.length > 1) {
             for (String s : names) {
@@ -179,7 +146,7 @@ public class Client {
         JOptionPane.showMessageDialog(null, "You lost.");
     }
 
-    private void processTurn(Coordinate coord) throws IOException, ClassNotFoundException {
+    private void processTurn(Coordinate coord) throws IOException {
         System.out.println("Received " + coord.toString());
 
         if (coord.getX() == -1 && coord.getY() == -1) {
@@ -188,10 +155,10 @@ public class Client {
             Coordinate clickedCoords = null;
             boolean tileIsRevealed = false;
             while(clickedCoords == null || tileIsRevealed){
-                clickedCoords = gamePanel.getClickListener().getClickedCoords();
-                if(clickedCoords != null) tileIsRevealed = gamePanel.isTileRevealed(clickedCoords);
+                clickedCoords = game.getClickedCoords();
+                if(clickedCoords != null) tileIsRevealed = game.isTileRevealed(clickedCoords);
             }
-            gamePanel.getClickListener().resetCoords();
+            game.resetClickedCoordinates();
 
             setState("Wait for your turn");
 
@@ -200,7 +167,7 @@ public class Client {
             objectOutputStream.flush();
         } else {
             //Receive coords
-            gamePanel.updateBoard(coord);
+            game.updateBoard(coord);
         }
     }
 

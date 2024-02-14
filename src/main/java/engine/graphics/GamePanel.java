@@ -1,6 +1,6 @@
 package engine.graphics;
 
-import engine.net.dataPackage.Coordinate;
+import engine.net.data.Coordinate;
 import engine.board.Board;
 import engine.handler.ClickListener;
 
@@ -98,18 +98,18 @@ public class GamePanel extends JPanel{
         return tileSize;
     }
 
-    public ClickListener getClickListener() {
+    protected ClickListener getClickListener() {
         return this.clickListener;
     }
 
-    public boolean isTileRevealed(Coordinate coord){
+    protected boolean isTileRevealed(Coordinate coord){
         return board.isRevealed(coord.getX(), coord.getY());
     }
 
     /**
      * @return if the chosen coordinate is a bomb
      **/
-    public boolean updateBoard(Coordinate coord) {
+    protected boolean updateBoard(Coordinate coord) {
         return clickTile(coord.getX(), coord.getY());
     }
 }

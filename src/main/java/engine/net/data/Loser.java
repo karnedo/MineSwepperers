@@ -1,10 +1,10 @@
-package engine.net.dataPackage;
+package engine.net.data;
 
 import java.io.Serializable;
 
 public class Loser implements Serializable {
 
-    private String loser;
+    private final String loser;
 
     public Loser(String loser){
         this.loser = loser;

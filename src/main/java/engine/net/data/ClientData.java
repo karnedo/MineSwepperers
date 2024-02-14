@@ -1,4 +1,4 @@
-package engine.net.dataPackage;
+package engine.net.data;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -40,8 +40,7 @@ public class ClientData {
     }
 
     public Serializable receiveObject() throws IOException, ClassNotFoundException{
-        Serializable obj = (Serializable) input.readObject();
-        return obj;
+        return (Serializable) input.readObject();
     }
 
 }

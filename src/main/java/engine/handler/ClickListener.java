@@ -1,6 +1,6 @@
 package engine.handler;
 
-import engine.net.dataPackage.Coordinate;
+import engine.net.data.Coordinate;
 import engine.graphics.GamePanel;
 
 import java.awt.event.MouseAdapter;

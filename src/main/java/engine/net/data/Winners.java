@@ -1,11 +1,10 @@
-package engine.net.dataPackage;
+package engine.net.data;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 
 public class Winners implements Serializable  {
 
-    private String[] names;
+    private final String[] names;
 
     public Winners(String[] names){
         this.names = names;
