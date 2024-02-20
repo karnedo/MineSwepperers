@@ -15,7 +15,7 @@ import java.net.Socket;
 public class Client {
 
     private static String SERVER_IP;
-    private static final int PORT = 6096;
+    private static final int PORT = 19788;
     private static String NAME;
 
     private GamePanel gamePanel;
@@ -48,7 +48,7 @@ public class Client {
     }
 
     private Socket connect(){
-        boolean validData = false;
+        boolean validData;
         boolean couldConnect = false;
         Socket socket = null;
         do{
@@ -119,6 +119,7 @@ public class Client {
 
         objectInputStream.close();
         objectOutputStream.close();
+        socket.close();
 
         System.exit(0);
 

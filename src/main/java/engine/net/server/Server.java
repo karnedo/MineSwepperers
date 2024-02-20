@@ -14,7 +14,7 @@ import java.util.Iterator;
 
 public class Server implements Runnable{
 
-    private static final int PORT = 6096;
+    private static final int PORT = 19788;
 
     private ServerSocket server;
     private Board board;
@@ -142,6 +142,10 @@ public class Server implements Runnable{
             print("No winners.");
         }
 
+        closeConnections();
+
+
+
     }
 
     private void print(String msg){
@@ -194,6 +198,17 @@ public class Server implements Runnable{
     private void notifyPlayerTurn(ClientData clientTurn){
         //Sends -1, -1 to indicate its this player's turn.
         clientTurn.sendObject(new Coordinate(-1, -1));
+    }
+
+    private void closeConnections() {
+        Iterator<ClientData> iter = clients.iterator();
+        while(iter.hasNext()){
+            ClientData cli = iter.next();
+            cli.close();
+        }
+        try {
+            server.close();
+        } catch (IOException ignored) {}
     }
 
     public static void main(String[] args){

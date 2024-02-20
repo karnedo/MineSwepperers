@@ -39,6 +39,15 @@ public class ClientData {
         }
     }
 
+    public boolean close(){
+        try {
+            output.close();
+            input.close();
+            socket.close();
+            return true;
+        } catch (IOException e) { return false; }
+    }
+
     public Serializable receiveObject() throws IOException, ClassNotFoundException{
         return (Serializable) input.readObject();
     }
